@@ -406,22 +406,44 @@
                 return;
             }
 
-            container.innerHTML = manuscripts.map(m => `
-                <div class="bg-cyber-bg rounded-lg p-4 border border-cyber-cyan/10 hover:border-cyber-cyan/30 transition-all">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-serif text-lg text-cyber-text flex-1 pr-4">${escapeHtml(m.title)}</h4>
-                        <span class="status-badge ${m.status === 'Under Review' ? 'status-review' : m.status === 'Accepted' ? 'status-accepted' : 'status-rejected'}">
-                            ${m.status}
-                        </span>
+            container.innerHTML = manuscripts.map(m => {
+                let statusClass = '';
+                let statusText = m.status;
+                
+                switch (m.status) {
+                    case 'Awaiting Reviewer Assignment':
+                        statusClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/30';
+                        break;
+                    case 'Under Review':
+                        statusClass = 'status-review';
+                        break;
+                    case 'Accepted':
+                        statusClass = 'status-accepted';
+                        break;
+                    case 'Rejected':
+                        statusClass = 'status-rejected';
+                        break;
+                    default:
+                        statusClass = 'bg-cyber-muted/10 text-cyber-muted border border-cyber-muted/30';
+                }
+
+                return `
+                    <div class="bg-cyber-bg rounded-lg p-4 border border-cyber-cyan/10 hover:border-cyber-cyan/30 transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-serif text-lg text-cyber-text flex-1 pr-4">${escapeHtml(m.title)}</h4>
+                            <span class="status-badge ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm text-cyber-muted">
+                            <span>Submitted: ${new Date(m.submissionDate).toLocaleDateString()}</span>
+                            <button onclick="viewManuscriptDetails('${m.id}')" class="btn-cyber px-4 py-1 rounded text-xs">
+                                View Progress
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center text-sm text-cyber-muted">
-                        <span>Submitted: ${new Date(m.submissionDate).toLocaleDateString()}</span>
-                        <button onclick="viewManuscriptDetails('${m.id}')" class="btn-cyber px-4 py-1 rounded text-xs">
-                            View Progress
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function updateStats() {
@@ -429,6 +451,7 @@
             document.getElementById('underReviewCount').textContent = manuscripts.filter(m => m.status === 'Under Review').length;
             document.getElementById('acceptedCount').textContent = manuscripts.filter(m => m.status === 'Accepted').length;
             document.getElementById('rejectedCount').textContent = manuscripts.filter(m => m.status === 'Rejected').length;
+            document.getElementById('awaitingAssignmentCount').textContent = manuscripts.filter(m => m.status === 'Awaiting Reviewer Assignment').length;
         }
 
         async function viewManuscriptDetails(id) {

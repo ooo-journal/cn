@@ -371,12 +371,40 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-8">
+                <!-- Awaiting Reviewer Assignment -->
                 <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
                     <h2 class="font-serif text-2xl font-semibold mb-6">
-                        <span class="neon-text" style="color: #00f0ff;">Manuscripts</span> Awaiting Action
+                        <span class="neon-text" style="color: #00f0ff;">Manuscripts</span> Awaiting Reviewer Assignment
                     </h2>
 
-                    <div class="editor-table overflow-x-auto">
+                    <div class="editor-table overflow-x-auto" id="awaitingReviewerTable">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-cyber-cyan/20">
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Manuscript ID</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Title</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Author</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Submission Date</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-cyan/10" id="awaitingReviewerList">
+                                <!-- Dynamic content will be inserted here -->
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-cyber-muted">Loading manuscripts...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- All Manuscripts Overview -->
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h2 class="font-serif text-2xl font-semibold mb-6">
+                        <span class="neon-text" style="color: #ff00a0;">All</span> Manuscripts Overview
+                    </h2>
+
+                    <div class="editor-table overflow-x-auto" id="allManuscriptsTable">
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-cyber-cyan/20">
@@ -386,57 +414,10 @@
                                     <th class="text-left py-3 px-4 font-semibold text-cyber-text">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-cyber-cyan/10">
-                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
-                                    <td class="py-4 px-4 text-cyber-cyan font-mono">OOO-2026-001</td>
-                                    <td class="py-4 px-4 text-cyber-text">On the Thermodynamics of Cat Purring and Its Implications for Interstellar Travel</td>
-                                    <td class="py-4 px-4">
-                                        <span class="inline-block px-2 py-1 text-xs bg-cyber-cyan/10 text-cyber-cyan rounded">Awaiting Reviewer Assignment</span>
-                                    </td>
-                                    <td class="py-4 px-4">
-                                        <div class="flex gap-2">
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                Assign Reviewer
-                                            </button>
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                View Details
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
-                                    <td class="py-4 px-4 text-cyber-cyan font-mono">OOO-2026-002</td>
-                                    <td class="py-4 px-4 text-cyber-text">Predictive Modeling of Dream Sequences Using Quantum Entanglement Theory</td>
-                                    <td class="py-4 px-4">
-                                        <span class="inline-block px-2 py-1 text-xs bg-amber-500/10 text-amber-400 rounded">Review in Progress</span>
-                                    </td>
-                                    <td class="py-4 px-4">
-                                        <div class="flex gap-2">
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                View Reviews
-                                            </button>
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                View Details
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
-                                    <td class="py-4 px-4 text-cyber-cyan font-mono">OOO-2026-003</td>
-                                    <td class="py-4 px-4 text-cyber-text">Ethnobotanical Survey of Moss Species Used in Ancient Cyberpunk Rituals</td>
-                                    <td class="py-4 px-4">
-                                        <span class="inline-block px-2 py-1 text-xs bg-emerald-500/10 text-emerald-400 rounded">Ready for Decision</span>
-                                    </td>
-                                    <td class="py-4 px-4">
-                                        <div class="flex gap-2">
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                Make Decision
-                                            </button>
-                                            <button class="btn-cyber px-3 py-1 rounded text-xs font-medium">
-                                                View Details
-                                            </button>
-                                        </div>
-                                    </td>
+                            <tbody class="divide-y divide-cyber-cyan/10" id="allManuscriptsList">
+                                <!-- Dynamic content will be inserted here -->
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-cyber-muted">Loading manuscripts...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -652,6 +633,198 @@
                 });
             }
         });
+
+        async function initDB() {
+            if (!window.ooodb) {
+                await new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = 'js/db.js';
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+            await window.ooodb.init();
+        }
+
+        async function loadManuscripts() {
+            await initDB();
+            
+            // Load manuscripts awaiting reviewer assignment
+            const awaitingManuscripts = await window.ooodb.getManuscriptsAwaitingReviewerAssignment();
+            renderAwaitingManuscripts(awaitingManuscripts);
+            
+            // Load all manuscripts
+            const allManuscripts = await window.ooodb.getAllManuscripts();
+            renderAllManuscripts(allManuscripts);
+        }
+
+        function renderAwaitingManuscripts(manuscripts) {
+            const container = document.getElementById('awaitingReviewerList');
+            
+            if (manuscripts.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-cyber-muted">No manuscripts awaiting reviewer assignment</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            container.innerHTML = manuscripts.map(manuscript => `
+                <tr class="hover:bg-cyber-cyan/5 transition-colors">
+                    <td class="py-4 px-4 text-cyber-cyan font-mono">${manuscript.id}</td>
+                    <td class="py-4 px-4 text-cyber-text">${manuscript.title}</td>
+                    <td class="py-4 px-4 text-cyber-text">${manuscript.author}</td>
+                    <td class="py-4 px-4 text-cyber-muted">${new Date(manuscript.submissionDate).toLocaleDateString()}</td>
+                    <td class="py-4 px-4">
+                        <button onclick="openAssignReviewersModal('${manuscript.id}')" class="btn-cyber px-3 py-1 rounded text-xs font-medium">
+                            Assign Reviewers
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderAllManuscripts(manuscripts) {
+            const container = document.getElementById('allManuscriptsList');
+            
+            if (manuscripts.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-cyber-muted">No manuscripts found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            container.innerHTML = manuscripts.map(manuscript => {
+                let statusClass = '';
+                let statusText = manuscript.status;
+                
+                switch (manuscript.status) {
+                    case 'Awaiting Reviewer Assignment':
+                        statusClass = 'bg-cyber-cyan/10 text-cyber-cyan';
+                        break;
+                    case 'Under Review':
+                        statusClass = 'bg-amber-500/10 text-amber-400';
+                        statusText = 'Review in Progress';
+                        break;
+                    case 'Accepted':
+                        statusClass = 'bg-emerald-500/10 text-emerald-400';
+                        break;
+                    case 'Rejected':
+                        statusClass = 'bg-red-500/10 text-red-400';
+                        break;
+                    default:
+                        statusClass = 'bg-cyber-muted/10 text-cyber-muted';
+                }
+
+                return `
+                    <tr class="hover:bg-cyber-cyan/5 transition-colors">
+                        <td class="py-4 px-4 text-cyber-cyan font-mono">${manuscript.id}</td>
+                        <td class="py-4 px-4 text-cyber-text">${manuscript.title}</td>
+                        <td class="py-4 px-4">
+                            <span class="inline-block px-2 py-1 text-xs ${statusClass} rounded">${statusText}</span>
+                        </td>
+                        <td class="py-4 px-4">
+                            <button onclick="viewManuscriptDetails('${manuscript.id}')" class="btn-cyber px-3 py-1 rounded text-xs font-medium">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openAssignReviewersModal(manuscriptId) {
+            document.getElementById('manuscriptId').value = manuscriptId;
+            document.getElementById('assignReviewersModal').style.display = 'flex';
+        }
+
+        function closeAssignReviewersModal() {
+            document.getElementById('assignReviewersModal').style.display = 'none';
+            document.getElementById('manuscriptId').value = '';
+            document.querySelectorAll('#assignReviewersModal input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+
+        async function assignReviewers() {
+            const manuscriptId = document.getElementById('manuscriptId').value;
+            const selectedReviewers = [];
+            
+            document.querySelectorAll('#assignReviewersModal input[type="checkbox"]:checked').forEach(checkbox => {
+                selectedReviewers.push(parseInt(checkbox.value));
+            });
+
+            if (selectedReviewers.length === 0) {
+                alert('Please select at least one reviewer');
+                return;
+            }
+
+            try {
+                await window.ooodb.assignReviewers(manuscriptId, selectedReviewers);
+                closeAssignReviewersModal();
+                showToast('Reviewers assigned. Manuscript is now under review.');
+                loadManuscripts(); // Refresh the list
+            } catch (error) {
+                console.error('Error assigning reviewers:', error);
+                showToast('Failed to assign reviewers. Please try again.');
+            }
+        }
+
+        function viewManuscriptDetails(manuscriptId) {
+            console.log('View details for manuscript:', manuscriptId);
+            // Implement detail view if needed
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 bg-cyber-card border border-cyber-cyan/30 text-cyber-text px-4 py-3 rounded shadow-lg z-50 animate-slide-in';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize on page load
+        window.onload = loadManuscripts;
     </script>
+
+    <div id="assignReviewersModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-cyber-card border border-cyber-cyan/30 rounded-lg p-8 w-full max-w-md">
+            <h3 class="font-serif text-2xl font-semibold mb-6 text-center">
+                <span class="neon-text" style="color: #00f0ff;">Assign</span> Reviewers
+            </h3>
+            <input type="hidden" id="manuscriptId">
+            <div class="mb-6">
+                <label class="block text-cyber-muted text-sm mb-4">Select Reviewers (at least 3)</label>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="reviewer1" value="1" checked class="mr-3">
+                        <label for="reviewer1" class="text-cyber-text">Reviewer Alpha (ID: 1)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="reviewer2" value="2" checked class="mr-3">
+                        <label for="reviewer2" class="text-cyber-text">Reviewer Beta (ID: 2)</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="reviewer3" value="3" checked class="mr-3">
+                        <label for="reviewer3" class="text-cyber-text">Reviewer Gamma (ID: 3)</label>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="assignReviewers()" class="btn-cyber flex-1 py-3 rounded font-medium">
+                    Assign Reviewers
+                </button>
+                <button onclick="closeAssignReviewersModal()" class="bg-cyber-bg border border-cyber-muted/30 px-6 py-3 rounded text-cyber-muted hover:border-cyber-muted transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

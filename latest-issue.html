@@ -215,6 +215,31 @@
             display: block;
         }
 
+        .pdf-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -529,6 +554,11 @@
         </div>
     </main>
 
+    <div class="pdf-loading" id="pdfLoading">
+        <div class="text-cyber-cyan text-2xl font-mono mb-4">GENERATING PDF...</div>
+        <div class="text-cyber-muted">Rendering article content</div>
+    </div>
+
     <footer class="relative z-10 border-t border-cyber-cyan/10 mt-16" style="background: rgba(10, 12, 15, 0.95);">
         <div class="max-w-7xl mx-auto px-4 py-8">
             <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-cyber-muted mb-6">
@@ -553,7 +583,419 @@
         </div>
     </footer>
 
+    <script src="js/db.js"></script>
+    <script src="js/pdf.js"></script>
     <script>
+        let currentArticles = [];
+        let totalPages = 0;
+
+        async function init() {
+            await window.ooodb.init();
+            await initSampleData();
+            await loadArticles();
+        }
+
+        async function loadArticles() {
+            let articles = await window.ooodb.getAllAcceptedArticles();
+            
+            if (articles.length === 0) {
+                const manuscripts = await window.ooodb.getAllManuscripts();
+                articles = manuscripts.filter(m => m.status === 'Accepted');
+            }
+
+            articles.sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate));
+            currentArticles = articles;
+            
+            calculateTotalPages();
+            updateIssueInfo();
+            renderArticles();
+        }
+
+        function calculateTotalPages() {
+            totalPages = currentArticles.reduce((total, article) => total + (article.pages || 5), 0);
+        }
+
+        function updateIssueInfo() {
+            document.querySelector('h1').textContent = 'Volume 01, Issue 001';
+            document.querySelector('p.text-cyber-muted.mb-4').innerHTML = 'Out Of Ordinary | <span class="text-cyber-cyan">出离寻常·创刊号</span>';
+            
+            const issueInfo = document.querySelector('.bg-cyber-card.rounded-lg.p-6.border.border-cyber-cyan\/20');
+            if (issueInfo) {
+                const infoItems = issueInfo.querySelectorAll('.flex.items-center.justify-between');
+                infoItems[0].querySelector('.text-sm.text-cyber-text').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                infoItems[2].querySelector('.text-sm.text-cyber-text').textContent = '01';
+                infoItems[3].querySelector('.text-sm.text-cyber-text').textContent = '001';
+                infoItems[4].querySelector('.text-sm.text-cyber-text').textContent = currentArticles.length;
+                infoItems[5].querySelector('.text-sm.text-cyber-text').textContent = `1-${totalPages}`;
+            }
+        }
+
+        function renderArticles() {
+            const container = document.querySelector('.space-y-4');
+            
+            if (currentArticles.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-cyber-muted">
+                        <p class="mb-4">No articles found in this issue.</p>
+                        <p class="text-sm">Submit a manuscript to become the first published author!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let currentPage = 1;
+            container.innerHTML = currentArticles.map((article, index) => {
+                const articlePages = article.pages || 5;
+                const pageRange = `${currentPage}-${currentPage + articlePages - 1}`;
+                currentPage += articlePages;
+                
+                return `
+                    <div class="article-row rounded-lg p-5 border border-transparent hover:border-cyber-cyan/20">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div class="flex-1">
+                                <h3 class="font-serif text-lg text-cyber-text hover:text-cyber-cyan transition-colors cursor-pointer"
+                                    onclick="viewArticle('${article.id}')">
+                                    ${escapeHtml(article.title)}
+                                </h3>
+                                <div class="flex flex-wrap items-center gap-2 mt-2">
+                                    <span class="text-cyber-muted text-sm">${escapeHtml(article.author)}</span>
+                                    <span class="tag">#${generateTag(article.title)}</span>
+                                </div>
+                                <p class="text-cyber-muted text-xs mt-3">
+                                    ${escapeHtml(article.content?.substring(0, 150) || 'No abstract available.')}...
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-cyber-cyan/60 text-xs font-mono block mb-1">DOI: ${article.doi || '10.0000/OOO.2026.' + (index + 1).toString().padStart(3, '0')}</span>
+                                <span class="text-cyber-muted text-xs">Pages: ${pageRange}</span>
+                                <div class="flex flex-col gap-2 mt-3">
+                                    <button class="btn-cyber px-4 py-1 rounded text-xs font-medium"
+                                        onclick="viewArticle('${article.id}')">
+                                        View Article
+                                    </button>
+                                    <button class="bg-cyber-card border border-cyber-magenta/30 text-cyber-magenta px-4 py-1 rounded text-xs font-medium hover:border-cyber-magenta hover:shadow-[0_0_15px_rgba(255,0,160,0.3)] transition-all"
+                                        onclick="downloadArticlePDF('${article.id}')">
+                                        Download PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateTag(title) {
+            const words = title.split(' ');
+            const tag = words.slice(0, 3).map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join('-');
+            return tag.substring(0, 15) + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function viewArticle(id) {
+            window.location.href = `article-detail.html?id=${id}`;
+        }
+
+        async function downloadArticlePDF(articleId) {
+            const article = currentArticles.find(a => a.id === articleId);
+            if (!article) {
+                showToast('Article not found', 'error');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('pdfLoading');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 15;
+                const headerHeight = 12;
+                const footerHeight = 10;
+                const contentWidth = pageWidth - 2 * margin;
+
+                let y = margin + headerHeight;
+
+                pdf.setFillColor(10, 12, 15);
+                pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                pdf.setTextColor(0, 240, 255);
+                pdf.setFontSize(12);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('Out Of Ordinary', margin, margin + 4);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(255, 0, 160);
+                pdf.text('Vol.01, Issue 001', pageWidth - margin - 60, margin + 4);
+
+                pdf.setLineWidth(0.1);
+                pdf.setDrawColor(0, 240, 255);
+                pdf.line(margin, y - 2, pageWidth - margin, y - 2);
+
+                y += 10;
+
+                pdf.setFont('helvetica', 'bold');
+                pdf.setFontSize(16);
+                pdf.setTextColor(255, 255, 255);
+                pdf.text(article.title, pageWidth / 2, y, { align: 'center' });
+                y += 15;
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(0, 240, 255);
+                pdf.text(`by ${article.author}`, pageWidth / 2, y, { align: 'center' });
+                y += 10;
+
+                pdf.setTextColor(160, 160, 160);
+                pdf.setFontSize(8);
+                pdf.text(`DOI: ${article.doi || '10.0000/OOO.2026.001'}`, pageWidth / 2, y, { align: 'center' });
+                y += 15;
+
+                pdf.setLineWidth(0.1);
+                pdf.setDrawColor(255, 0, 160);
+                pdf.line(margin, y - 2, pageWidth - margin, y - 2);
+                y += 10;
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.setFontSize(10);
+                pdf.setTextColor(224, 224, 224);
+                
+                const paragraphs = (article.content || '').split('\n').filter(p => p.trim());
+                paragraphs.forEach(paragraph => {
+                    const lines = pdf.splitTextToSize(paragraph, contentWidth);
+                    lines.forEach(line => {
+                        if (y + 5 > pageHeight - margin - footerHeight) {
+                            pdf.setDrawColor(0, 240, 255);
+                            pdf.line(margin, pageHeight - margin - footerHeight + 2, pageWidth - margin, pageHeight - margin - footerHeight + 2);
+                            
+                            pdf.setFontSize(8);
+                            pdf.setTextColor(100, 100, 100);
+                            pdf.text('Page 1 of 1', pageWidth / 2, pageHeight - margin - 3, { align: 'center' });
+                            
+                            pdf.addPage();
+                            
+                            pdf.setFillColor(10, 12, 15);
+                            pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+                            
+                            pdf.setTextColor(0, 240, 255);
+                            pdf.setFontSize(12);
+                            pdf.setFont('helvetica', 'bold');
+                            pdf.text('Out Of Ordinary', margin, margin + 4);
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setTextColor(255, 0, 160);
+                            pdf.text('Vol.01, Issue 001', pageWidth - margin - 60, margin + 4);
+                            
+                            pdf.setLineWidth(0.1);
+                            pdf.setDrawColor(0, 240, 255);
+                            pdf.line(margin, y - 2, pageWidth - margin, y - 2);
+                            
+                            y = margin + headerHeight + 10;
+                            
+                            pdf.setFont('helvetica', 'normal');
+                            pdf.setFontSize(10);
+                            pdf.setTextColor(224, 224, 224);
+                        }
+                        pdf.text(line, margin, y);
+                        y += 5;
+                    });
+                    y += 5;
+                });
+
+                pdf.setDrawColor(0, 240, 255);
+                pdf.line(margin, pageHeight - margin - footerHeight + 2, pageWidth - margin, pageHeight - margin - footerHeight + 2);
+                
+                pdf.setFontSize(8);
+                pdf.setTextColor(100, 100, 100);
+                pdf.text('Page 1 of 1', pageWidth / 2, pageHeight - margin - 3, { align: 'center' });
+
+                const safeTitle = article.title.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, '_').substring(0, 30);
+                const fileName = `OOO_Vol01_001_${safeTitle}.pdf`;
+                pdf.save(fileName);
+                
+                showToast('PDF downloaded successfully!');
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                showToast('PDF generation failed. Please try again.', 'error');
+            } finally {
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+        }
+
+        async function downloadIssuePDF() {
+            if (currentArticles.length === 0) {
+                showToast('No articles to download', 'error');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('pdfLoading');
+            if (loadingOverlay) {
+                loadingOverlay.innerHTML = `
+                    <div class="text-cyber-cyan text-2xl font-mono mb-4">ASSEMBLING ISSUE PDF...</div>
+                    <div class="text-cyber-muted" id="pdfProgress">Processing 0/${currentArticles.length} articles</div>
+                `;
+                loadingOverlay.style.display = 'flex';
+            }
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 15;
+
+                pdf.setFillColor(10, 12, 15);
+                pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                pdf.setTextColor(0, 240, 255);
+                pdf.setFontSize(24);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('Out Of Ordinary', pageWidth / 2, 50, { align: 'center' });
+
+                pdf.setTextColor(255, 0, 160);
+                pdf.setFontSize(16);
+                pdf.text('Volume 01, Issue 001', pageWidth / 2, 70, { align: 'center' });
+
+                pdf.setTextColor(224, 224, 224);
+                pdf.setFontSize(12);
+                pdf.text('出离寻常档案馆', pageWidth / 2, 90, { align: 'center' });
+                pdf.text(`Published: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, 110, { align: 'center' });
+
+                pdf.setLineWidth(0.5);
+                pdf.setDrawColor(0, 240, 255);
+                pdf.line(margin, 130, pageWidth - margin, 130);
+
+                pdf.setFontSize(14);
+                pdf.setTextColor(0, 240, 255);
+                pdf.text('Table of Contents', pageWidth / 2, 145, { align: 'center' });
+
+                let y = 160;
+                currentArticles.forEach((article, index) => {
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(224, 224, 224);
+                    pdf.text(`${index + 1}. ${article.title}`, margin, y);
+                    pdf.text(`by ${article.author}`, pageWidth - margin, y, { align: 'right' });
+                    y += 8;
+                });
+
+                pdf.addPage();
+
+                for (let i = 0; i < currentArticles.length; i++) {
+                    if (loadingOverlay) {
+                        document.getElementById('pdfProgress').textContent = `Processing ${i + 1}/${currentArticles.length} articles`;
+                    }
+
+                    const article = currentArticles[i];
+                    
+                    pdf.setFillColor(10, 12, 15);
+                    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+
+                    pdf.setTextColor(0, 240, 255);
+                    pdf.setFontSize(12);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text('Out Of Ordinary', margin, margin + 4);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setTextColor(255, 0, 160);
+                    pdf.text('Vol.01, Issue 001', pageWidth - margin - 60, margin + 4);
+
+                    let articleY = margin + 20;
+                    
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.setFontSize(16);
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.text(article.title, pageWidth / 2, articleY, { align: 'center' });
+                    articleY += 15;
+
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(0, 240, 255);
+                    pdf.text(`by ${article.author}`, pageWidth / 2, articleY, { align: 'center' });
+                    articleY += 10;
+
+                    pdf.setTextColor(160, 160, 160);
+                    pdf.setFontSize(8);
+                    pdf.text(`DOI: ${article.doi || '10.0000/OOO.2026.' + (i + 1).toString().padStart(3, '0')}`, pageWidth / 2, articleY, { align: 'center' });
+                    articleY += 15;
+
+                    pdf.setLineWidth(0.1);
+                    pdf.setDrawColor(255, 0, 160);
+                    pdf.line(margin, articleY - 2, pageWidth - margin, articleY - 2);
+                    articleY += 10;
+
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(224, 224, 224);
+                    
+                    const paragraphs = (article.content || '').split('\n').filter(p => p.trim());
+                    paragraphs.forEach(paragraph => {
+                        const lines = pdf.splitTextToSize(paragraph, pageWidth - 2 * margin);
+                        lines.forEach(line => {
+                            if (articleY + 5 > pageHeight - margin - 20) {
+                                pdf.addPage();
+                                pdf.setFillColor(10, 12, 15);
+                                pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+                                articleY = margin + 20;
+                            }
+                            pdf.text(line, margin, articleY);
+                            articleY += 5;
+                        });
+                        articleY += 5;
+                    });
+
+                    if (i < currentArticles.length - 1) {
+                        pdf.addPage();
+                    }
+                }
+
+                pdf.save('OOO_Vol01_Issue001_Full.pdf');
+                showToast('Issue PDF downloaded successfully!');
+            } catch (error) {
+                console.error('Issue PDF generation error:', error);
+                showToast('PDF generation failed. Please try again.', 'error');
+            } finally {
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-20 right-4 z-50 bg-cyber-card border border-cyber-cyan/30 rounded p-4 shadow-[0_0_20px_rgba(0,240,255,0.3)] animate-slide-in';
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span style="color: ${type === 'success' ? '#00f0ff' : '#ff4444'};">${type === 'success' ? '✓' : '✕'}</span>
+                    <span class="text-cyber-text">${message}</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
             dropdown.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -568,6 +1010,10 @@
                 });
             }
         });
+
+        document.querySelector('.btn-cyber.w-full').addEventListener('click', downloadIssuePDF);
+
+        init();
     </script>
 </body>
 </html>

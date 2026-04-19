@@ -398,7 +398,8 @@
                         <h4 class="font-serif text-lg text-cyber-text flex-1 pr-4">${escapeHtml(m.title)}</h4>
                         <span class="text-cyber-cyan/60 text-xs font-mono">ID: ${m.id.slice(-8)}</span>
                     </div>
-                    <p class="text-cyber-muted text-sm mb-2">by ${escapeHtml(m.author)}</p>
+                    <p class="text-cyber-muted text-sm mb-2">by Anonymous</p>
+                    <p class="text-cyber-muted/80 text-xs mb-1 italic">Author information concealed during review</p>
                     <p class="text-cyber-muted/80 text-xs mb-3">Submitted: ${new Date(m.submissionDate).toLocaleDateString()}</p>
                     <button onclick="openReviewModal('${m.id}')" class="btn-cyber w-full py-2 rounded text-sm font-medium">
                         [ Review ]
@@ -422,7 +423,8 @@
                             <h4 class="font-serif text-lg text-cyber-text flex-1 pr-4">${escapeHtml(m.title)}</h4>
                             <span class="text-xs font-mono ${review?.decision === 'Accept' ? 'text-green-400' : 'text-red-400'}">${review?.decision}</span>
                         </div>
-                        <p class="text-cyber-muted text-sm mb-2">by ${escapeHtml(m.author)}</p>
+                        <p class="text-cyber-muted text-sm mb-2">by Anonymous</p>
+                        <p class="text-cyber-muted/80 text-xs mb-1 italic">Author information concealed during review</p>
                         <p class="text-cyber-muted/80 text-xs italic">"${escapeHtml(review?.comments?.substring(0, 60))}..."</p>
                     </div>
                 `;
@@ -441,7 +443,8 @@
 
             document.getElementById('manuscriptInfo').innerHTML = `
                 <h4 class="font-serif text-lg mb-2">${escapeHtml(m.title)}</h4>
-                <p class="text-cyber-muted text-sm">by ${escapeHtml(m.author)}</p>
+                <p class="text-cyber-muted text-sm">by Anonymous</p>
+                <p class="text-cyber-muted/80 text-xs mb-2 italic">Author information concealed during review</p>
                 <p class="text-cyber-muted/80 text-xs mt-2">${escapeHtml(m.content?.substring(0, 200))}...</p>
             `;
 
