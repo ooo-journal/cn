@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out Of Ordinary | Author Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-bg': '#0a0c0f',
+                        'cyber-card': '#12161a',
+                        'cyber-cyan': '#00f0ff',
+                        'cyber-magenta': '#ff00a0',
+                        'cyber-text': '#e0e0e0',
+                        'cyber-muted': '#6b7280',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0c0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes scanline {
+            0% { top: -2px; }
+            100% { top: 100vh; }
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 5px rgba(0, 240, 255, 0.3), inset 0 0 5px rgba(0, 240, 255, 0.1);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #00f0ff;
+            box-shadow: 0 0 5px #00f0ff;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(18, 22, 26, 0.95);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: #e0e0e0;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+        }
+
+        .btn-cyber {
+            background: linear-gradient(135deg, #12161a, #1a1f25);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-cyber:hover::before {
+            left: 100%;
+        }
+
+        .btn-cyber:hover {
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+        }
+
+        .mobile-dropdown-content {
+            display: none;
+        }
+
+        .mobile-dropdown.active .mobile-dropdown-content {
+            display: block;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0c0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scanline"></div>
+
+    <header class="relative z-10 border-b border-cyber-cyan/20" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="font-serif text-3xl font-bold tracking-wide" style="color: #e0e0e0;">
+                        Out Of <span class="neon-text" style="color: #00f0ff;">Ordinary</span>
+                    </h1>
+                    <p class="text-sm text-cyber-muted mt-1 font-sans">
+                        Vol. 01 / No. 001 // <span class="text-cyber-cyan/70">出离寻常档案馆</span>
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <nav class="hidden lg:flex items-center gap-6 desktop-nav">
+                        <a href="index.html" class="nav-link text-sm text-cyber-text/80">Articles & Issues</a>
+                        <a href="#about" class="nav-link text-sm text-cyber-text/80">About</a>
+                        
+                        <div class="dropdown">
+                            <a href="submission-portal.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Submit
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="submission-portal.html" class="dropdown-item text-xs">Submit Your Article</a>
+                                <a href="author-guide.html" class="dropdown-item text-xs">Author Guide</a>
+                                <a href="call-for-papers.html" class="dropdown-item text-xs">Call for Papers</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <a href="latest-issue.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Journal Info
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="latest-issue.html" class="dropdown-item text-xs">Latest Issue</a>
+                                <a href="all-issues.html" class="dropdown-item text-xs">All Issues</a>
+                                <a href="special-issues.html" class="dropdown-item text-xs">Special Issues & Collections</a>
+                            </div>
+                        </div>
+                        
+                        <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80">Editorial Board</a>
+                        <a href="#order" class="nav-link text-sm text-cyber-text/80">Order Journal</a>
+                    </nav>
+
+                    <div class="relative">
+                        <input
+                            type="text"
+                            placeholder="Search neural archive..."
+                            class="bg-cyber-card border border-cyber-cyan/30 rounded px-4 py-2 pl-10 text-sm text-cyber-text w-64 focus:outline-none focus:border-cyber-cyan transition-all duration-300 focus:shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+                        >
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyber-cyan/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="lg:hidden flex items-center gap-4 mt-4 pb-2 overflow-x-auto mobile-menu">
+                <a href="index.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Home</a>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Submit
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="submission-portal.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Submit Your Article</a>
+                        <a href="author-guide.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Author Guide</a>
+                        <a href="call-for-papers.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Call for Papers</a>
+                    </div>
+                </div>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Journal Info
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="latest-issue.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Latest Issue</a>
+                        <a href="all-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">All Issues</a>
+                        <a href="special-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Special Issues</a>
+                    </div>
+                </div>
+                
+                <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Editorial Board</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-4xl mx-auto px-4 py-8">
+        <div class="mb-8 text-center">
+            <h1 class="font-serif text-3xl font-bold mb-2">
+                <span class="neon-text" style="color: #00f0ff;">Author</span> Guide
+            </h1>
+            <p class="text-cyber-muted">Submission guidelines for extraordinary research</p>
+            <div class="section-divider max-w-2xl mx-auto mt-4"></div>
+        </div>
+
+        <div class="space-y-8">
+            <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h2 class="font-serif text-xl font-semibold mb-4">
+                    <span class="neon-text" style="color: #ff00a0;">Submission</span> Requirements
+                </h2>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-cyber-cyan/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Formatting</h3>
+                            <p class="text-sm text-cyber-muted">
+                                No formatting required. We accept .docx, .txt, napkin sketches (scanned), and telepathic bursts (in beta). Our neural network will automatically format your submission to meet our standards.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-cyber-cyan/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Length</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Articles can be any length, from a single sentence to a multi-volume epic. Our only requirement is that the content is sufficiently odd and thought-provoking.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-cyber-cyan/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Figures & Tables</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Include any visual elements that enhance your research. We accept photographs, diagrams, abstract art, and even interpretive dance videos (uploaded as supplementary material).
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-cyber-cyan/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">References</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Cite any sources that inspired your work. We accept traditional academic references, personal anecdotes, and citations of fictional works (with proper attribution).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h2 class="font-serif text-xl font-semibold mb-4">
+                    <span class="neon-text" style="color: #ff00a0;">Submission</span> Process
+                </h2>
+                <div class="space-y-6">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-cyber-magenta/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-medium text-cyber-magenta">1</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Prepare Your Manuscript</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Create your manuscript in any format. Remember, the weirder, the better. Our editorial team specializes in identifying the extraordinary in the mundane.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-cyber-magenta/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-medium text-cyber-magenta">2</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Submit Through the Portal</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Upload your manuscript through our Submission Portal. You'll receive an immediate confirmation that your submission has entered our neural review queue.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-cyber-magenta/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-medium text-cyber-magenta">3</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Neural Review Process</h3>
+                            <p class="text-sm text-cyber-muted">
+                                Our AI system will first assess your submission's oddity quotient. If it passes, it will be assigned to human reviewers with expertise in your area of oddity.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 bg-cyber-magenta/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span class="text-sm font-medium text-cyber-magenta">4</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-cyber-text mb-2">Decision & Revision</h3>
+                            <p class="text-sm text-cyber-muted">
+                                You'll receive a decision within 24-48 hours. If revisions are requested, you'll have 7 days to resubmit. Accepted manuscripts will be published within 3-5 business days.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h2 class="font-serif text-xl font-semibold mb-4">
+                    <span class="neon-text" style="color: #ff00a0;">Author</span> Benefits
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                        <h3 class="font-medium text-cyber-text mb-2">Global Visibility</h3>
+                        <p class="text-sm text-cyber-muted">
+                            Your work will be indexed in the OOO-Core database and visible to researchers across the multiverse.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                        <h3 class="font-medium text-cyber-text mb-2">Creative Freedom</h3>
+                        <p class="text-sm text-cyber-muted">
+                            No rigid formatting guidelines or scope restrictions. Your imagination is the only limit.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                        <h3 class="font-medium text-cyber-text mb-2">Rapid Publication</h3>
+                        <p class="text-sm text-cyber-muted">
+                            Our streamlined process ensures your work reaches readers within days, not months.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                        <h3 class="font-medium text-cyber-text mb-2">Community Recognition</h3>
+                        <p class="text-sm text-cyber-muted">
+                            Join our community of visionary thinkers and receive recognition for your extraordinary contributions.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h2 class="font-serif text-xl font-semibold mb-4">
+                    <span class="neon-text" style="color: #ff00a0;">Frequently</span> Asked Questions
+                </h2>
+                <div class="space-y-4">
+                    <div class="border-b border-cyber-cyan/10 pb-4">
+                        <h3 class="font-medium text-cyber-text mb-2">What types of research do you accept?</h3>
+                        <p class="text-sm text-cyber-muted">
+                            We accept any research that challenges conventional thinking and explores the extraordinary. From speculative science to philosophical musings, if it's out of the ordinary, we want to see it.
+                        </p>
+                    </div>
+                    <div class="border-b border-cyber-cyan/10 pb-4">
+                        <h3 class="font-medium text-cyber-text mb-2">Do I need to have a academic background?</h3>
+                        <p class="text-sm text-cyber-muted">
+                            No formal academic background is required. We value creativity and originality above credentials. Whether you're a professional researcher or an amateur enthusiast, your ideas are welcome.
+                        </p>
+                    </div>
+                    <div class="border-b border-cyber-cyan/10 pb-4">
+                        <h3 class="font-medium text-cyber-text mb-2">Is there a submission fee?</h3>
+                        <p class="text-sm text-cyber-muted">
+                            No, we do not charge submission fees. We believe that extraordinary ideas should be accessible to everyone, regardless of financial resources.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-cyber-text mb-2">How can I check the status of my submission?</h3>
+                        <p class="text-sm text-cyber-muted">
+                            You can track your submission's progress through our Author Dashboard. You'll receive email notifications at each stage of the review process.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="submission-portal.html" class="btn-cyber inline-block px-8 py-3 rounded text-sm font-medium">
+                    Submit Your Manuscript
+                </a>
+                <p class="text-xs text-cyber-muted mt-4">
+                    Ready to share your extraordinary research with the world?
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-10 border-t border-cyber-cyan/10 mt-16" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-cyber-muted mb-6">
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Privacy Policy</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Terms and Conditions</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Accessibility</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Cookie Settings</a>
+            </div>
+
+            <div class="section-divider mb-6"></div>
+
+            <p class="text-center text-cyber-muted/60 text-xs">
+                Indexed in: <span class="text-cyber-cyan/70">OOO-Core</span>, <span class="text-cyber-magenta/70">Human Oddity Database</span>, <span class="text-cyber-cyan/70">Imaginary Citation Index</span> (Impact Factor: ∞)
+            </p>
+
+            <p class="text-center text-cyber-muted/40 text-[10px] mt-4 font-mono">
+                &copy; 2026 Out Of Ordinary. All ideas reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.mobile-dropdown')) {
+                document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

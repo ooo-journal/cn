@@ -1,0 +1,22 @@
+{
+  "name": "out-of-ordinary-journal",
+  "version": "1.0.0",
+  "description": "Out Of Ordinary (OOO) academic journal website with cyberpunk aesthetics",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx serve",
+    "build": "echo 'Building...'",
+    "start": "npx serve"
+  },
+  "keywords": [
+    "academic",
+    "journal",
+    "cyberpunk",
+    "frontend"
+  ],
+  "author": "Out Of Ordinary Editorial Board",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

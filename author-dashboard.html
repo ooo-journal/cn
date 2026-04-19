@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out Of Ordinary | Author Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-bg': '#0a0c0f',
+                        'cyber-card': '#12161a',
+                        'cyber-cyan': '#00f0ff',
+                        'cyber-magenta': '#ff00a0',
+                        'cyber-text': '#e0e0e0',
+                        'cyber-muted': '#6b7280',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0c0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes scanline {
+            0% { top: -2px; }
+            100% { top: 100vh; }
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 5px rgba(0, 240, 255, 0.3), inset 0 0 5px rgba(0, 240, 255, 0.1);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #00f0ff;
+            box-shadow: 0 0 5px #00f0ff;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(18, 22, 26, 0.95);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: #e0e0e0;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(0, 240, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #00f0ff;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        }
+
+        .upload-area.dragover {
+            border-color: #ff00a0;
+            box-shadow: 0 0 30px rgba(255, 0, 160, 0.3);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #00f0ff, #ff00a0);
+            animation: progress 3s ease-in-out;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-review {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+
+        .status-revision {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .status-accepted {
+            background: rgba(72, 187, 120, 0.1);
+            color: #48bb78;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-cyber {
+            background: linear-gradient(135deg, #12161a, #1a1f25);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-cyber:hover::before {
+            left: 100%;
+        }
+
+        .btn-cyber:hover {
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+            
+            .submission-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+
+        .mobile-dropdown-content {
+            display: none;
+        }
+
+        .mobile-dropdown.active .mobile-dropdown-content {
+            display: block;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0c0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 3px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #12161a;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .workflow-step {
+            position: relative;
+        }
+
+        .workflow-step::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 24px;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0, 240, 255, 0.3);
+        }
+
+        .workflow-step:last-child::before {
+            display: none;
+        }
+
+        .workflow-step.completed .step-icon {
+            background: #48bb78;
+            border-color: #48bb78;
+        }
+
+        .workflow-step.pending .step-icon {
+            background: rgba(0, 240, 255, 0.2);
+            border-color: #00f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scanline"></div>
+
+    <header class="relative z-10 border-b border-cyber-cyan/20" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="font-serif text-3xl font-bold tracking-wide" style="color: #e0e0e0;">
+                        Out Of <span class="neon-text" style="color: #00f0ff;">Ordinary</span>
+                    </h1>
+                    <p class="text-sm text-cyber-muted mt-1 font-sans">
+                        Vol. 01 / No. 001 // <span class="text-cyber-cyan/70">出离寻常档案馆</span>
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <nav class="hidden lg:flex items-center gap-6 desktop-nav">
+                        <a href="index.html" class="nav-link text-sm text-cyber-text/80">Articles & Issues</a>
+                        <a href="#about" class="nav-link text-sm text-cyber-text/80">About</a>
+                        
+                        <div class="dropdown">
+                            <a href="submission-portal.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Submit
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="submission-portal.html" class="dropdown-item text-xs">Submit Your Article</a>
+                                <a href="author-guide.html" class="dropdown-item text-xs">Author Guide</a>
+                                <a href="call-for-papers.html" class="dropdown-item text-xs">Call for Papers</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <a href="latest-issue.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Journal Info
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="latest-issue.html" class="dropdown-item text-xs">Latest Issue</a>
+                                <a href="all-issues.html" class="dropdown-item text-xs">All Issues</a>
+                                <a href="special-issues.html" class="dropdown-item text-xs">Special Issues & Collections</a>
+                            </div>
+                        </div>
+                        
+                        <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80">Editorial Board</a>
+                        <a href="#order" class="nav-link text-sm text-cyber-text/80">Order Journal</a>
+                    </nav>
+
+                    <div class="relative">
+                        <input
+                            type="text"
+                            placeholder="Search neural archive..."
+                            class="bg-cyber-card border border-cyber-cyan/30 rounded px-4 py-2 pl-10 text-sm text-cyber-text w-64 focus:outline-none focus:border-cyber-cyan transition-all duration-300 focus:shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+                        >
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyber-cyan/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="lg:hidden flex items-center gap-4 mt-4 pb-2 overflow-x-auto mobile-menu">
+                <a href="index.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Home</a>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Submit
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="submission-portal.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Submit Your Article</a>
+                        <a href="author-guide.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Author Guide</a>
+                        <a href="call-for-papers.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Call for Papers</a>
+                    </div>
+                </div>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Journal Info
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="latest-issue.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Latest Issue</a>
+                        <a href="all-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">All Issues</a>
+                        <a href="special-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Special Issues</a>
+                    </div>
+                </div>
+                
+                <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Editorial Board</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="font-serif text-3xl font-bold mb-2">
+                Welcome, <span class="neon-text" style="color: #00f0ff;">Thinker</span>.
+            </h1>
+            <p class="text-cyber-muted">Your Oddities Dashboard</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h2 class="font-serif text-xl font-semibold mb-6">
+                        <span class="neon-text" style="color: #00f0ff;">Submit</span> New Manuscript
+                    </h2>
+
+                    <div id="uploadArea" class="upload-area rounded-lg p-8 text-center mb-6">
+                        <div id="uploadContent">
+                            <svg class="w-12 h-12 text-cyber-cyan/50 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <h3 class="font-serif text-lg font-medium mb-2">Drag and drop your manuscript</h3>
+                            <p class="text-cyber-muted text-sm mb-4">or click to browse</p>
+                            <input type="file" id="fileInput" class="hidden" accept=".docx,.txt,.pdf">
+                            <button id="browseBtn" class="btn-cyber px-6 py-2 rounded text-sm font-medium">
+                                Browse Files
+                            </button>
+                        </div>
+
+                        <div id="uploadProgress" class="hidden">
+                            <h3 class="font-serif text-lg font-medium mb-4">Uploading manuscript...</h3>
+                            <div class="bg-cyber-bg rounded-full h-2 mb-4">
+                                <div class="progress-bar rounded-full"></div>
+                            </div>
+                            <p class="text-cyber-muted text-sm" id="progressText">Initializing neural upload...</p>
+                        </div>
+
+                        <div id="uploadSuccess" class="hidden">
+                            <svg class="w-12 h-12 text-emerald-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="font-serif text-lg font-medium mb-2 text-emerald-400">Upload Successful</h3>
+                            <p class="text-cyber-muted text-sm mb-4">Manuscript uploaded. Entering neural review queue...</p>
+                            <button id="uploadAnother" class="btn-cyber px-6 py-2 rounded text-sm font-medium">
+                                Upload Another
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-cyber-muted space-y-2">
+                        <p><span class="text-cyber-cyan">✓</span> Accepted formats: .docx, .txt, .pdf, napkin sketches (scanned)</p>
+                        <p><span class="text-cyber-cyan">✓</span> Maximum file size: 1 Odd Idea (unlimited)</p>
+                        <p><span class="text-cyber-cyan">✓</span> Telepathic submissions: in beta</p>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h2 class="font-serif text-xl font-semibold mb-6">
+                        <span class="neon-text" style="color: #ff00a0;">My</span> Submissions
+                    </h2>
+
+                    <div class="submission-table overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-cyber-cyan/20">
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Title</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Date Submitted</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Status</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-cyber-text">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-cyber-cyan/10">
+                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
+                                    <td class="py-4 px-4 text-cyber-text">
+                                        On the Thermodynamics of Cat Purring and Its Implications for Interstellar Travel
+                                    </td>
+                                    <td class="py-4 px-4 text-cyber-muted">2026-04-15</td>
+                                    <td class="py-4 px-4">
+                                        <span class="status-badge status-review">Under Review</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button class="view-details-btn text-cyber-cyan text-xs hover:text-cyber-magenta transition-colors" data-id="1">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
+                                    <td class="py-4 px-4 text-cyber-text">
+                                        Predictive Modeling of Dream Sequences Using Quantum Entanglement Theory
+                                    </td>
+                                    <td class="py-4 px-4 text-cyber-muted">2026-04-10</td>
+                                    <td class="py-4 px-4">
+                                        <span class="status-badge status-revision">Revision Required</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button class="view-details-btn text-cyber-cyan text-xs hover:text-cyber-magenta transition-colors" data-id="2">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-cyber-cyan/5 transition-colors">
+                                    <td class="py-4 px-4 text-cyber-text">
+                                        Ethnobotanical Survey of Moss Species Used in Ancient Cyberpunk Rituals
+                                    </td>
+                                    <td class="py-4 px-4 text-cyber-muted">2026-04-05</td>
+                                    <td class="py-4 px-4">
+                                        <span class="status-badge status-accepted">Accepted with Oddity</span>
+                                    </td>
+                                    <td class="py-4 px-4">
+                                        <button class="view-details-btn text-cyber-cyan text-xs hover:text-cyber-magenta transition-colors" data-id="3">
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h3 class="font-serif text-lg font-semibold mb-4">
+                        <span class="neon-text" style="color: #00f0ff;">Author</span> Statistics
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Total Submissions</span>
+                                <span class="text-cyber-cyan font-mono">7</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-cyber-cyan h-2 rounded-full" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Acceptance Rate</span>
+                                <span class="text-cyber-magenta font-mono">100%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-cyber-magenta h-2 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Average Review Time</span>
+                                <span class="text-cyber-cyan font-mono">3.14 days</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 42%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h3 class="font-serif text-lg font-semibold mb-4">
+                        <span class="neon-text" style="color: #ff00a0;">Neural</span> Recommendations
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Submit to Special Issue</h4>
+                            <p class="text-xs text-cyber-muted">"AI Divination" deadline approaching</p>
+                        </div>
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Co-author Opportunity</h4>
+                            <p class="text-xs text-cyber-muted">Dr. Anonymous seeking collaborator</p>
+                        </div>
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Review Invitation</h4>
+                            <p class="text-xs text-cyber-muted">Consider reviewing for OOO</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="detailsModal" class="modal-overlay">
+        <div class="modal-content rounded-lg">
+            <div class="p-6 border-b border-cyber-cyan/20">
+                <div class="flex items-center justify-between">
+                    <h2 class="font-serif text-xl font-semibold text-cyber-text">
+                        Submission <span class="neon-text" style="color: #00f0ff;">Details</span>
+                    </h2>
+                    <button
+                        id="closeDetailsModal"
+                        class="w-8 h-8 rounded flex items-center justify-center border border-cyber-cyan/30 text-cyber-cyan hover:bg-cyber-cyan/10 transition-colors"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <h3 class="font-serif text-lg font-medium mb-4">On the Thermodynamics of Cat Purring and Its Implications for Interstellar Travel</h3>
+                <p class="text-cyber-muted text-sm mb-6">Submitted: 2026-04-15 | Manuscript ID: OOO-2026-001</p>
+
+                <h4 class="font-serif text-base font-semibold mb-3 text-cyber-text">Review Workflow</h4>
+                <div class="space-y-4 ml-2">
+                    <div class="workflow-step completed">
+                        <div class="flex items-start gap-3">
+                            <div class="step-icon w-6 h-6 rounded-full border-2 flex items-center justify-center text-white text-xs">✓</div>
+                            <div>
+                                <h5 class="text-sm font-medium text-cyber-text">1. Initial Check</h5>
+                                <p class="text-xs text-cyber-muted">Completed: 2026-04-15</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="workflow-step pending">
+                        <div class="flex items-start gap-3">
+                            <div class="step-icon w-6 h-6 rounded-full border-2 flex items-center justify-center text-cyber-cyan text-xs">2</div>
+                            <div>
+                                <h5 class="text-sm font-medium text-cyber-text">2. Reviewer Assigned</h5>
+                                <p class="text-xs text-cyber-muted">Reviewer #042 | In progress</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="workflow-step pending">
+                        <div class="flex items-start gap-3">
+                            <div class="step-icon w-6 h-6 rounded-full border-2 border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan text-xs">3</div>
+                            <div>
+                                <h5 class="text-sm font-medium text-cyber-text">3. Under Review</h5>
+                                <p class="text-xs text-cyber-muted">Pending assignment</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="workflow-step pending">
+                        <div class="flex items-start gap-3">
+                            <div class="step-icon w-6 h-6 rounded-full border-2 border-cyber-cyan/30 flex items-center justify-center text-cyber-cyan text-xs">4</div>
+                            <div>
+                                <h5 class="text-sm font-medium text-cyber-text">4. Decision Pending</h5>
+                                <p class="text-xs text-cyber-muted">Awaiting reviewer feedback</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-cyber-bg rounded p-4 border border-cyber-cyan/10">
+                    <h4 class="font-serif text-base font-semibold mb-3 text-cyber-text">Submission Files</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-2 hover:bg-cyber-cyan/5 rounded">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span class="text-sm text-cyber-text">cat-purring-thermodynamics.docx</span>
+                            </div>
+                            <button class="text-cyber-cyan text-xs hover:text-cyber-magenta transition-colors">
+                                Download
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between p-2 hover:bg-cyber-cyan/5 rounded">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span class="text-sm text-cyber-text">interstellar-cat-purring.pdf</span>
+                            </div>
+                            <button class="text-cyber-cyan text-xs hover:text-cyber-magenta transition-colors">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t border-cyber-cyan/20">
+                <button
+                    id="closeDetailsModalBottom"
+                    class="btn-cyber w-full py-3 rounded text-sm font-medium"
+                >
+                    [ Close ]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="relative z-10 border-t border-cyber-cyan/10 mt-16" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-cyber-muted mb-6">
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Privacy Policy</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Terms and Conditions</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Accessibility</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Cookie Settings</a>
+            </div>
+
+            <div class="section-divider mb-6"></div>
+
+            <p class="text-center text-cyber-muted/60 text-xs">
+                Indexed in: <span class="text-cyber-cyan/70">OOO-Core</span>, <span class="text-cyber-magenta/70">Human Oddity Database</span>, <span class="text-cyber-cyan/70">Imaginary Citation Index</span> (Impact Factor: ∞)
+            </p>
+
+            <p class="text-center text-cyber-muted/40 text-[10px] mt-4 font-mono">
+                &copy; 2026 Out Of Ordinary. All ideas reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.mobile-dropdown')) {
+                document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadContent = document.getElementById('uploadContent');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const uploadSuccess = document.getElementById('uploadSuccess');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const uploadAnother = document.getElementById('uploadAnother');
+
+        browseBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload();
+            }
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFileUpload();
+            }
+        });
+
+        function handleFileUpload() {
+            uploadContent.classList.add('hidden');
+            uploadProgress.classList.remove('hidden');
+
+            setTimeout(() => {
+                uploadProgress.classList.add('hidden');
+                uploadSuccess.classList.remove('hidden');
+            }, 3000);
+        }
+
+        uploadAnother.addEventListener('click', () => {
+            uploadSuccess.classList.add('hidden');
+            uploadContent.classList.remove('hidden');
+            fileInput.value = '';
+        });
+
+        const detailsModal = document.getElementById('detailsModal');
+        const closeDetailsModal = document.getElementById('closeDetailsModal');
+        const closeDetailsModalBottom = document.getElementById('closeDetailsModalBottom');
+        const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+
+        viewDetailsBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                detailsModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        closeDetailsModal.addEventListener('click', closeDetailsModalFn);
+        closeDetailsModalBottom.addEventListener('click', closeDetailsModalFn);
+
+        function closeDetailsModalFn() {
+            detailsModal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        detailsModal.addEventListener('click', (e) => {
+            if (e.target === detailsModal) {
+                closeDetailsModalFn();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && detailsModal.classList.contains('active')) {
+                closeDetailsModalFn();
+            }
+        });
+    </script>
+</body>
+</html>

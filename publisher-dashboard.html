@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out Of Ordinary | Publisher Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-bg': '#0a0c0f',
+                        'cyber-card': '#12161a',
+                        'cyber-cyan': '#00f0ff',
+                        'cyber-magenta': '#ff00a0',
+                        'cyber-text': '#e0e0e0',
+                        'cyber-muted': '#6b7280',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0c0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes scanline {
+            0% { top: -2px; }
+            100% { top: 100vh; }
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .neon-border {
+            box-shadow: 0 0 5px rgba(0, 240, 255, 0.3), inset 0 0 5px rgba(0, 240, 255, 0.1);
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #00f0ff;
+            box-shadow: 0 0 5px #00f0ff;
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            color: #00f0ff;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(18, 22, 26, 0.95);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            min-width: 200px;
+            display: none;
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            text-decoration: none;
+            color: #e0e0e0;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(0, 240, 255, 0.1);
+            color: #00f0ff;
+        }
+
+        .btn-cyber {
+            background: linear-gradient(135deg, #12161a, #1a1f25);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-cyber:hover::before {
+            left: 100%;
+        }
+
+        .btn-cyber:hover {
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
+
+        .stat-card {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            border-color: #00f0ff;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+        }
+
+        .stat-number {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-shadow: 0 0 15px currentColor;
+        }
+
+        .cyan-glow {
+            color: #00f0ff;
+            text-shadow: 0 0 15px #00f0ff;
+        }
+
+        .magenta-glow {
+            color: #ff00a0;
+            text-shadow: 0 0 15px #ff00a0;
+        }
+
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.3), transparent);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .desktop-nav {
+                display: none;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+        }
+
+        .mobile-dropdown-content {
+            display: none;
+        }
+
+        .mobile-dropdown.active .mobile-dropdown-content {
+            display: block;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0c0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #00f0ff;
+            border-radius: 3px;
+        }
+
+        .trend-up {
+            color: #48bb78;
+        }
+
+        .trend-down {
+            color: #f56565;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scanline"></div>
+
+    <header class="relative z-10 border-b border-cyber-cyan/20" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="font-serif text-3xl font-bold tracking-wide" style="color: #e0e0e0;">
+                        Out Of <span class="neon-text" style="color: #00f0ff;">Ordinary</span>
+                    </h1>
+                    <p class="text-sm text-cyber-muted mt-1 font-sans">
+                        Vol. 01 / No. 001 // <span class="text-cyber-cyan/70">出离寻常档案馆</span>
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-6">
+                    <nav class="hidden lg:flex items-center gap-6 desktop-nav">
+                        <a href="index.html" class="nav-link text-sm text-cyber-text/80">Articles & Issues</a>
+                        <a href="#about" class="nav-link text-sm text-cyber-text/80">About</a>
+                        
+                        <div class="dropdown">
+                            <a href="submission-portal.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Submit
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="submission-portal.html" class="dropdown-item text-xs">Submit Your Article</a>
+                                <a href="author-guide.html" class="dropdown-item text-xs">Author Guide</a>
+                                <a href="call-for-papers.html" class="dropdown-item text-xs">Call for Papers</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dropdown">
+                            <a href="latest-issue.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
+                                Journal Info
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu rounded">
+                                <a href="latest-issue.html" class="dropdown-item text-xs">Latest Issue</a>
+                                <a href="all-issues.html" class="dropdown-item text-xs">All Issues</a>
+                                <a href="special-issues.html" class="dropdown-item text-xs">Special Issues & Collections</a>
+                            </div>
+                        </div>
+                        
+                        <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80">Editorial Board</a>
+                        <a href="#order" class="nav-link text-sm text-cyber-text/80">Order Journal</a>
+                    </nav>
+
+                    <div class="relative">
+                        <input
+                            type="text"
+                            placeholder="Search neural archive..."
+                            class="bg-cyber-card border border-cyber-cyan/30 rounded px-4 py-2 pl-10 text-sm text-cyber-text w-64 focus:outline-none focus:border-cyber-cyan transition-all duration-300 focus:shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+                        >
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyber-cyan/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="lg:hidden flex items-center gap-4 mt-4 pb-2 overflow-x-auto mobile-menu">
+                <a href="index.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Home</a>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Submit
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="submission-portal.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Submit Your Article</a>
+                        <a href="author-guide.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Author Guide</a>
+                        <a href="call-for-papers.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Call for Papers</a>
+                    </div>
+                </div>
+                
+                <div class="mobile-dropdown">
+                    <a href="#" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap flex items-center gap-1">
+                        Journal Info
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </a>
+                    <div class="mobile-dropdown-content bg-cyber-card border border-cyber-cyan/20 rounded p-2 mt-2">
+                        <a href="latest-issue.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Latest Issue</a>
+                        <a href="all-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">All Issues</a>
+                        <a href="special-issues.html" class="block text-xs text-cyber-text py-2 px-3 hover:bg-cyber-cyan/10 rounded">Special Issues</a>
+                    </div>
+                </div>
+                
+                <a href="editorial-board.html" class="nav-link text-sm text-cyber-text/80 whitespace-nowrap">Editorial Board</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-7xl mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h1 class="font-serif text-3xl font-bold mb-2">
+                Welcome, <span class="neon-text" style="color: #ff00a0;">Publisher</span>.
+            </h1>
+            <p class="text-cyber-muted">Journal Metrics & Performance</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h3 class="text-sm text-cyber-muted mb-2">Submissions This Month</h3>
+                <div class="flex items-baseline gap-2">
+                    <span class="stat-number text-4xl cyan-glow">42</span>
+                    <span class="text-xs trend-up flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        +17%
+                    </span>
+                </div>
+                <p class="text-xs text-cyber-muted mt-2">vs 36 last month</p>
+            </div>
+
+            <div class="stat-card bg-cyber-card rounded-lg p-6 border border-cyber-magenta/20">
+                <h3 class="text-sm text-cyber-muted mb-2">Acceptance Rate</h3>
+                <div class="flex items-baseline gap-2">
+                    <span class="stat-number text-4xl magenta-glow">94.7%</span>
+                    <span class="text-xs trend-up flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        +2.3%
+                    </span>
+                </div>
+                <p class="text-xs text-cyber-muted mt-2">Highly odd content</p>
+            </div>
+
+            <div class="stat-card bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                <h3 class="text-sm text-cyber-muted mb-2">Average Time to Oddity</h3>
+                <div class="flex items-baseline gap-2">
+                    <span class="stat-number text-4xl cyan-glow">3.14</span>
+                    <span class="text-xs text-cyber-text">days</span>
+                </div>
+                <p class="text-xs text-cyber-muted mt-2">From submission to publication</p>
+            </div>
+
+            <div class="stat-card bg-cyber-card rounded-lg p-6 border border-cyber-magenta/20">
+                <h3 class="text-sm text-cyber-muted mb-2">Impact Factor</h3>
+                <div class="flex items-baseline gap-2">
+                    <span class="stat-number text-4xl magenta-glow">∞</span>
+                    <span class="text-xs trend-up flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                        </svg>
+                        Infinite
+                    </span>
+                </div>
+                <p class="text-xs text-cyber-muted mt-2">Measured in imagination units</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h2 class="font-serif text-2xl font-semibold mb-6">
+                        <span class="neon-text" style="color: #00f0ff;">Submission</span> Trends
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">January</span>
+                                <span class="text-cyber-cyan font-mono">18</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-3">
+                                <div class="bg-cyber-cyan h-3 rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">February</span>
+                                <span class="text-cyber-cyan font-mono">25</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-3">
+                                <div class="bg-cyber-cyan h-3 rounded-full" style="width: 62%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">March</span>
+                                <span class="text-cyber-cyan font-mono">36</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-3">
+                                <div class="bg-cyber-cyan h-3 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">April</span>
+                                <span class="text-cyber-cyan font-mono">42</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-3">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-3 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">May (Projected)</span>
+                                <span class="text-cyber-cyan font-mono">50</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-3">
+                                <div class="bg-cyber-magenta h-3 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h2 class="font-serif text-2xl font-semibold mb-6">
+                        <span class="neon-text" style="color: #ff00a0;">Top</span> Oddity Categories
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-serif text-sm font-medium text-cyber-text">AI & Divination</h3>
+                                <span class="text-xs text-cyber-cyan font-mono">28%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 28%"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-serif text-sm font-medium text-cyber-text">Quantum Phenomena</h3>
+                                <span class="text-xs text-cyber-cyan font-mono">22%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 22%"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-serif text-sm font-medium text-cyber-text">Extraterrestrial Studies</h3>
+                                <span class="text-xs text-cyber-cyan font-mono">18%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-serif text-sm font-medium text-cyber-text">Paranormal Research</h3>
+                                <span class="text-xs text-cyber-cyan font-mono">15%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-cyber-bg rounded border border-cyber-cyan/10 md:col-span-2">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-serif text-sm font-medium text-cyber-text">Other Oddities</h3>
+                                <span class="text-xs text-cyber-cyan font-mono">17%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-cyan to-cyber-magenta h-2 rounded-full" style="width: 17%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h3 class="font-serif text-lg font-semibold mb-4">
+                        <span class="neon-text" style="color: #00f0ff;">Journal</span> Health
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Editorial Efficiency</span>
+                                <span class="text-cyber-cyan font-mono">98%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-cyber-cyan h-2 rounded-full" style="width: 98%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Reviewer Satisfaction</span>
+                                <span class="text-cyber-magenta font-mono">96%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-cyber-magenta h-2 rounded-full" style="width: 96%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Author Satisfaction</span>
+                                <span class="text-cyber-cyan font-mono">99%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-cyber-cyan h-2 rounded-full" style="width: 99%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-cyber-muted">Neural Network Health</span>
+                                <span class="text-cyber-magenta font-mono">100%</span>
+                            </div>
+                            <div class="bg-cyber-bg rounded-full h-2">
+                                <div class="bg-gradient-to-r from-cyber-magenta to-cyber-cyan h-2 rounded-full" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h3 class="font-serif text-lg font-semibold mb-4">
+                        <span class="neon-text" style="color: #ff00a0;">Global</span> Reach
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Readership</h4>
+                            <p class="text-2xl font-mono cyan-glow">12,478</p>
+                            <p class="text-xs text-cyber-muted">Unique readers this month</p>
+                        </div>
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Countries</h4>
+                            <p class="text-2xl font-mono magenta-glow">42</p>
+                            <p class="text-xs text-cyber-muted">Global distribution</p>
+                        </div>
+                        <div class="p-3 bg-cyber-bg rounded border border-cyber-cyan/10">
+                            <h4 class="text-sm font-medium text-cyber-text mb-1">Institutions</h4>
+                            <p class="text-2xl font-mono cyan-glow">1,847</p>
+                            <p class="text-xs text-cyber-muted">Academic institutions</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20">
+                    <h3 class="font-serif text-lg font-semibold mb-4">
+                        <span class="neon-text" style="color: #00f0ff;">Quick</span> Actions
+                    </h3>
+                    <div class="space-y-2">
+                        <button class="btn-cyber w-full py-2 rounded text-sm font-medium">
+                            Generate Monthly Report
+                        </button>
+                        <button class="btn-cyber w-full py-2 rounded text-sm font-medium">
+                            Manage Special Issues
+                        </button>
+                        <button class="btn-cyber w-full py-2 rounded text-sm font-medium">
+                            Update Journal Settings
+                        </button>
+                        <button class="btn-cyber w-full py-2 rounded text-sm font-medium">
+                            View Financial Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="relative z-10 border-t border-cyber-cyan/10 mt-16" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-cyber-muted mb-6">
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Privacy Policy</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Terms and Conditions</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Accessibility</a>
+                <span>|</span>
+                <a href="#" class="hover:text-cyber-cyan transition-colors">Cookie Settings</a>
+            </div>
+
+            <div class="section-divider mb-6"></div>
+
+            <p class="text-center text-cyber-muted/60 text-xs">
+                Indexed in: <span class="text-cyber-cyan/70">OOO-Core</span>, <span class="text-cyber-magenta/70">Human Oddity Database</span>, <span class="text-cyber-cyan/70">Imaginary Citation Index</span> (Impact Factor: ∞)
+            </p>
+
+            <p class="text-center text-cyber-muted/40 text-[10px] mt-4 font-mono">
+                &copy; 2026 Out Of Ordinary. All ideas reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('click', (e) => {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            });
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.mobile-dropdown')) {
+                document.querySelectorAll('.mobile-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
