@@ -559,12 +559,17 @@
                 content: content,
                 file: document.getElementById('uploadedFileName')?.textContent || 'manuscript.docx',
                 submissionDate: new Date().toISOString(),
-                status: 'Under Review',
-                reviewers: [1, 2, 3],
+                status: 'Awaiting Reviewer Assignment',
+                reviewers: [],
                 reviews: [],
                 isPublic: false,
                 finalDecision: null,
-                revisionCount: 0
+                revisionCount: 0,
+                statusHistory: [{
+                    status: 'Awaiting Reviewer Assignment',
+                    timestamp: new Date().toISOString(),
+                    comment: 'Manuscript submitted and awaiting reviewer assignment'
+                }]
             };
 
             await window.ooodb.addManuscript(manuscript);
