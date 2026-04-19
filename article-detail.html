@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out Of Ordinary | Article Detail</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-bg': '#0a0c0f',
+                        'cyber-card': '#12161a',
+                        'cyber-cyan': '#00f0ff',
+                        'cyber-magenta': '#ff00a0',
+                        'cyber-text': '#e0e0e0',
+                        'cyber-muted': '#6b7280',
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0a0c0f;
+            color: #e0e0e0;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .scanline {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.4), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 1;
+        }
+        @keyframes scanline {
+            0% { top: -2px; }
+            100% { top: 100vh; }
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+        .neon-text-magenta {
+            text-shadow: 0 0 10px rgba(255, 0, 160, 0.5), 0 0 20px rgba(255, 0, 160, 0.3);
+        }
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 0; height: 1px;
+            background: #00f0ff;
+            box-shadow: 0 0 5px #00f0ff;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .nav-link:hover { color: #00f0ff; text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .btn-cyber {
+            background: linear-gradient(135deg, #12161a, #1a1f25);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cyber::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .btn-cyber:hover::before { left: 100%; }
+        .btn-cyber:hover { box-shadow: 0 0 30px rgba(0, 240, 255, 0.4); text-shadow: 0 0 10px rgba(0, 240, 255, 0.5); }
+        .btn-cyber-magenta {
+            background: linear-gradient(135deg, #12161a, #1a1f25);
+            border: 1px solid #ff00a0;
+            color: #ff00a0;
+            transition: all 0.3s ease;
+        }
+        .btn-cyber-magenta:hover { box-shadow: 0 0 30px rgba(255, 0, 160, 0.4); text-shadow: 0 0 10px rgba(255, 0, 160, 0.5); }
+        .toast {
+            position: fixed;
+            top: 20px; right: 20px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, rgba(10, 12, 15, 0.95), rgba(20, 25, 35, 0.95));
+            border: 1px solid #00f0ff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0c0f; }
+        ::-webkit-scrollbar-thumb { background: #ff00a0; border-radius: 3px; }
+        .pdf-loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .article-content {
+            line-height: 1.8;
+        }
+        .article-content p {
+            margin-bottom: 1rem;
+        }
+        @media print {
+            body { background: white; color: black; }
+            .bg-grid, .scanline, header, footer, .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scanline"></div>
+
+    <header class="relative z-10 border-b border-cyber-cyan/20" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h1 class="font-serif text-3xl font-bold tracking-wide" style="color: #e0e0e0;">
+                        Out Of <span class="neon-text" style="color: #00f0ff;">Ordinary</span>
+                    </h1>
+                    <p class="text-sm text-cyber-muted mt-1 font-sans">
+                        Vol. 01 / <span class="neon-text-magenta" style="color: #ff00a0;">Article Detail</span>
+                    </p>
+                </div>
+                <nav class="hidden lg:flex items-center gap-6">
+                    <a href="index.html" class="nav-link text-sm text-cyber-text/80">Home</a>
+                    <a href="submission-portal.html" class="nav-link text-sm text-cyber-text/80">Submit</a>
+                    <a href="archive.html" class="nav-link text-sm" style="color: #ff00a0;">Archive</a>
+                </nav>
+                <button onclick="goBack()" class="btn-cyber px-4 py-2 rounded text-sm">
+                    Back to Archive
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-5xl mx-auto px-4 py-8" id="printableContent">
+        <div id="articleContent" class="space-y-6">
+            <p class="text-cyber-muted text-center py-12">Loading article...</p>
+        </div>
+    </main>
+
+    <div class="pdf-loading" id="pdfLoading">
+        <div class="text-cyber-cyan text-2xl font-mono mb-4">GENERATING PDF...</div>
+        <div class="text-cyber-muted">Rendering article content</div>
+    </div>
+
+    <footer class="relative z-10 border-t border-cyber-cyan/10 mt-16" style="background: rgba(10, 12, 15, 0.95);">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <p class="text-center text-cyber-muted/60 text-xs">
+                Indexed in: <span class="text-cyber-cyan/70">OOO-Core</span>, <span class="text-cyber-magenta/70">Human Oddity Database</span>
+            </p>
+            <p class="text-center text-cyber-muted/40 text-[10px] mt-4 font-mono">
+                &copy; 2026 Out Of Ordinary. All ideas reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/db.js"></script>
+    <script src="js/pdf.js"></script>
+    <script>
+        let currentArticle = null;
+
+        async function init() {
+            await window.ooodb.init();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const articleId = urlParams.get('id');
+
+            if (articleId) {
+                await loadArticle(articleId);
+            } else {
+                document.getElementById('articleContent').innerHTML = `
+                    <div class="bg-cyber-card rounded-lg p-12 border border-cyber-magenta/20 text-center">
+                        <p class="text-cyber-muted mb-4">Article not found.</p>
+                        <a href="archive.html" class="btn-cyber px-6 py-3 rounded inline-block mt-4">Back to Archive</a>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadArticle(id) {
+            currentArticle = await window.ooodb.getAcceptedArticle(id);
+
+            if (!currentArticle) {
+                const manuscripts = await window.ooodb.getAllManuscripts();
+                currentArticle = manuscripts.find(m => m.id === id && m.status === 'Accepted');
+            }
+
+            if (!currentArticle) {
+                document.getElementById('articleContent').innerHTML = `
+                    <div class="bg-cyber-card rounded-lg p-12 border border-cyber-magenta/20 text-center">
+                        <p class="text-cyber-muted mb-4">Article not found.</p>
+                        <a href="archive.html" class="btn-cyber px-6 py-3 rounded inline-block mt-4">Back to Archive</a>
+                    </div>
+                `;
+                return;
+            }
+
+            window.currentArticle = currentArticle;
+            renderArticle();
+        }
+
+        function renderArticle() {
+            const article = currentArticle;
+            const container = document.getElementById('articleContent');
+
+            container.innerHTML = `
+                <article class="bg-cyber-card rounded-lg p-8 border border-cyber-magenta/20">
+                    <header class="border-b border-cyber-cyan/20 pb-6 mb-6">
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="px-3 py-1 bg-cyber-cyan/20 border border-cyber-cyan/30 rounded-full text-cyber-cyan text-xs font-medium">
+                                Published
+                            </span>
+                        </div>
+                        <h1 class="font-serif text-3xl md:text-4xl font-bold text-cyber-text mb-4 leading-tight">
+                            ${escapeHtml(article.title)}
+                        </h1>
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-cyber-muted">
+                            <span>by <span class="text-cyber-cyan">${escapeHtml(article.author)}</span></span>
+                            <span>|</span>
+                            <span>Published: ${article.publicationDate ? new Date(article.publicationDate).toLocaleDateString() : 'N/A'}</span>
+                            <span>|</span>
+                            <span class="font-mono text-xs text-cyber-cyan/60">DOI: ${article.doi || '10.0000/OOO/pending'}</span>
+                        </div>
+                    </header>
+
+                    <div class="article-content text-cyber-text/90 leading-relaxed mb-8">
+                        ${formatContent(article.content)}
+                    </div>
+
+                    <footer class="border-t border-cyber-cyan/20 pt-6 mt-8">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
+                            <div class="flex gap-3">
+                                <button onclick="downloadPDF()" class="btn-cyber px-6 py-3 rounded font-medium">
+                                    Download PDF
+                                </button>
+                                <button onclick="window.print()" class="btn-cyber-magenta px-6 py-3 rounded font-medium no-print">
+                                    Print
+                                </button>
+                            </div>
+                            <p class="text-cyber-muted/60 text-sm italic">
+                                "Beyond the Ordinary" — Out Of Ordinary Journal
+                            </p>
+                        </div>
+                    </footer>
+                </article>
+
+                <div class="bg-cyber-card rounded-lg p-6 border border-cyber-cyan/20 mt-8">
+                    <h3 class="font-serif text-lg font-semibold mb-4">About This Article</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-cyber-muted">Submission ID:</span>
+                            <span class="text-cyber-text ml-2 font-mono">${article.id}</span>
+                        </div>
+                        <div>
+                            <span class="text-cyber-muted">Submitted:</span>
+                            <span class="text-cyber-text ml-2">${article.submissionDate ? new Date(article.submissionDate).toLocaleDateString() : 'N/A'}</span>
+                        </div>
+                        <div>
+                            <span class="text-cyber-muted">Reviews:</span>
+                            <span class="text-cyber-text ml-2">${article.reviews?.length || 0} completed</span>
+                        </div>
+                        <div>
+                            <span class="text-cyber-muted">Final Decision:</span>
+                            <span class="text-cyber-cyan ml-2">${article.finalDecision || 'Accepted with Oddity'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatContent(content) {
+            if (!content) return '<p class="text-cyber-muted italic">No content available.</p>';
+
+            const paragraphs = content.split('\n').filter(p => p.trim());
+            return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('');
+        }
+
+        function downloadPDF() {
+            if (!currentArticle) return;
+            generatePDF('articleContent', currentArticle.title, currentArticle.author);
+        }
+
+        function goBack() {
+            window.location.href = 'archive.html';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <span style="color: ${type === 'success' ? '#00f0ff' : '#ff4444'};">${type === 'success' ? '✓' : '✕'}</span>
+                    <span class="text-cyber-text">${message}</span>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -286,6 +286,7 @@
                                 <a href="latest-issue.html" class="dropdown-item text-xs">Latest Issue</a>
                                 <a href="all-issues.html" class="dropdown-item text-xs">All Issues</a>
                                 <a href="special-issues.html" class="dropdown-item text-xs">Special Issues & Collections</a>
+                                <a href="archive.html" class="dropdown-item text-xs" style="color: #ff00a0;">Accepted Archive</a>
                             </div>
                         </div>
                         
@@ -353,7 +354,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="login-card bg-cyber-card rounded-lg p-8 border border-cyber-cyan/20 text-center cursor-pointer" onclick="window.location.href='author-dashboard.html'">
+            <div class="login-card bg-cyber-card rounded-lg p-8 border border-cyber-cyan/20 text-center cursor-pointer" onclick="showAuthorLogin()">
                 <div class="w-16 h-16 rounded-full bg-cyber-cyan/10 border border-cyber-cyan/30 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-cyber-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -366,7 +367,7 @@
                 </button>
             </div>
 
-            <div class="login-card bg-cyber-card rounded-lg p-8 border border-cyber-magenta/20 text-center cursor-pointer" onclick="window.location.href='reviewer-dashboard.html'">
+            <div class="login-card bg-cyber-card rounded-lg p-8 border border-cyber-magenta/20 text-center cursor-pointer" onclick="showReviewerLogin()">
                 <div class="w-16 h-16 rounded-full bg-cyber-magenta/10 border border-cyber-magenta/30 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-cyber-magenta" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
@@ -466,6 +467,135 @@
                 });
             }
         });
+
+        async function initDB() {
+            if (!window.ooodb) {
+                await new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = 'js/db.js';
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+            await window.ooodb.init();
+            await initSampleData();
+        }
+
+        function showReviewerLogin() {
+            document.getElementById('reviewerPasswordModal').style.display = 'flex';
+        }
+
+        function closeReviewerModal() {
+            document.getElementById('reviewerPasswordModal').style.display = 'none';
+            document.getElementById('reviewerPassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+        }
+
+        function verifyReviewerPassword() {
+            const password = document.getElementById('reviewerPassword').value;
+            if (password === '5201314') {
+                closeReviewerModal();
+                document.getElementById('reviewerSelectModal').style.display = 'flex';
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('passwordError').textContent = 'INVALID NEURAL KEY';
+            }
+        }
+
+        function selectReviewer(reviewerId, reviewerName) {
+            localStorage.setItem('ooo_reviewer_id', reviewerId);
+            localStorage.setItem('ooo_reviewer_name', reviewerName);
+            window.location.href = 'reviewer-dashboard.html';
+        }
+
+        function closeReviewerSelect() {
+            document.getElementById('reviewerSelectModal').style.display = 'none';
+        }
+
+        function showAuthorLogin() {
+            document.getElementById('authorLoginModal').style.display = 'flex';
+        }
+
+        function closeAuthorModal() {
+            document.getElementById('authorLoginModal').style.display = 'none';
+            document.getElementById('authorName').value = '';
+        }
+
+        function loginAsAuthor() {
+            const authorName = document.getElementById('authorName').value.trim() || 'Curious Mind';
+            localStorage.setItem('ooo_author_name', authorName);
+            window.location.href = 'author-dashboard.html';
+        }
+
+        initDB();
     </script>
+
+    <div id="reviewerPasswordModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-cyber-card border border-cyber-magenta/30 rounded-lg p-8 w-full max-w-md">
+            <h3 class="font-serif text-2xl font-semibold mb-6 text-center">
+                <span class="neon-text" style="color: #ff00a0;">Reviewer</span> Authentication
+            </h3>
+            <div class="mb-6">
+                <label class="block text-cyber-muted text-sm mb-2">Neural Key</label>
+                <input type="password" id="reviewerPassword" placeholder="Enter reviewer password" 
+                    class="w-full bg-cyber-bg border border-cyber-cyan/30 rounded px-4 py-3 text-cyber-text focus:outline-none focus:border-cyber-cyan transition-all">
+                <p id="passwordError" class="text-red-500 text-sm mt-2 hidden">INVALID NEURAL KEY</p>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="verifyReviewerPassword()" class="btn-cyber flex-1 py-3 rounded font-medium">
+                    Authenticate
+                </button>
+                <button onclick="closeReviewerModal()" class="bg-cyber-bg border border-cyber-muted/30 px-6 py-3 rounded text-cyber-muted hover:border-cyber-muted transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reviewerSelectModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-cyber-card border border-cyber-cyan/30 rounded-lg p-8 w-full max-w-md">
+            <h3 class="font-serif text-2xl font-semibold mb-6 text-center">
+                Select <span class="neon-text" style="color: #00f0ff;">Identity</span>
+            </h3>
+            <div class="space-y-4">
+                <button onclick="selectReviewer(1, 'Reviewer Alpha')" class="w-full bg-cyber-bg border border-cyber-cyan/20 hover:border-cyber-cyan rounded-lg p-4 text-left transition-all">
+                    <div class="font-medium text-cyber-text">Reviewer Alpha (ID: 1)</div>
+                    <div class="text-cyber-muted text-sm">Specializes in odd phenomena</div>
+                </button>
+                <button onclick="selectReviewer(2, 'Reviewer Beta')" class="w-full bg-cyber-bg border border-cyber-cyan/20 hover:border-cyber-cyan rounded-lg p-4 text-left transition-all">
+                    <div class="font-medium text-cyber-text">Reviewer Beta (ID: 2)</div>
+                    <div class="text-cyber-muted text-sm">Expert in quantum oddities</div>
+                </button>
+                <button onclick="selectReviewer(3, 'Reviewer Gamma')" class="w-full bg-cyber-bg border border-cyber-cyan/20 hover:border-cyber-cyan rounded-lg p-4 text-left transition-all">
+                    <div class="font-medium text-cyber-text">Reviewer Gamma (ID: 3)</div>
+                    <div class="text-cyber-muted text-sm">Focused on ordinary anomalies</div>
+                </button>
+            </div>
+            <button onclick="closeReviewerSelect()" class="w-full mt-6 bg-cyber-bg border border-cyber-muted/30 px-6 py-3 rounded text-cyber-muted hover:border-cyber-muted transition-all">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <div id="authorLoginModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-cyber-card border border-cyber-cyan/30 rounded-lg p-8 w-full max-w-md">
+            <h3 class="font-serif text-2xl font-semibold mb-6 text-center">
+                <span class="neon-text" style="color: #00f0ff;">Author</span> Login
+            </h3>
+            <div class="mb-6">
+                <label class="block text-cyber-muted text-sm mb-2">Your Name</label>
+                <input type="text" id="authorName" placeholder="Enter your name (default: Curious Mind)" 
+                    class="w-full bg-cyber-bg border border-cyber-cyan/30 rounded px-4 py-3 text-cyber-text focus:outline-none focus:border-cyber-cyan transition-all">
+            </div>
+            <div class="flex gap-4">
+                <button onclick="loginAsAuthor()" class="btn-cyber flex-1 py-3 rounded font-medium">
+                    Enter Dashboard
+                </button>
+                <button onclick="closeAuthorModal()" class="bg-cyber-bg border border-cyber-muted/30 px-6 py-3 rounded text-cyber-muted hover:border-cyber-muted transition-all">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

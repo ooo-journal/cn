@@ -325,15 +325,24 @@
                         
                         <div class="relative group">
                             <a href="latest-issue.html" class="nav-link text-sm text-cyber-text/80 flex items-center gap-1">
-                                Journal Info
+                                Articles & Issues
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
                             </a>
-                            <div class="absolute top-full left-0 mt-1 bg-cyber-card border border-cyber-cyan/20 rounded shadow-lg w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
+                            <div class="absolute top-full left-0 mt-1 bg-cyber-card border border-cyber-cyan/20 rounded shadow-lg w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-10">
                                 <a href="latest-issue.html" class="block px-4 py-2 text-xs text-cyber-text hover:bg-cyber-cyan/10">Latest Issue</a>
                                 <a href="all-issues.html" class="block px-4 py-2 text-xs text-cyber-text hover:bg-cyber-cyan/10">All Issues</a>
                                 <a href="special-issues.html" class="block px-4 py-2 text-xs text-cyber-text hover:bg-cyber-cyan/10">Special Issues & Collections</a>
+                                <div class="border-t border-cyber-cyan/20 my-1"></div>
+                                <a href="archive.html" class="block px-4 py-2 text-xs text-cyber-magenta hover:bg-cyber-magenta/10 font-medium">
+                                    <span class="flex items-center gap-2">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                        </svg>
+                                        Accepted Archive
+                                    </span>
+                                </a>
                             </div>
                         </div>
                         
@@ -344,6 +353,7 @@
                     <div class="relative">
                         <input
                             type="text"
+                            id="headerSearchInput"
                             placeholder="Search neural archive..."
                             class="search-glow bg-cyber-card border border-cyber-cyan/30 rounded px-4 py-2 pl-10 text-sm text-cyber-text w-64 focus:outline-none focus:border-cyber-cyan transition-all duration-300"
                         >
@@ -351,6 +361,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
+                    <div id="searchResults" class="absolute right-0 top-full mt-2 bg-cyber-card border border-cyber-cyan/30 rounded shadow-lg w-96 max-h-96 overflow-y-auto hidden z-50"></div>
                 </div>
             </div>
 
@@ -693,11 +704,16 @@
         </div>
     </div>
 
+    <script src="js/db.js"></script>
     <script>
         const openModalBtn = document.getElementById('openModal');
         const closeModalBtn = document.getElementById('closeModal');
         const closeModalBottomBtn = document.getElementById('closeModalBottom');
         const modalOverlay = document.getElementById('modalOverlay');
+        const searchInput = document.getElementById('headerSearchInput');
+        const searchResults = document.getElementById('searchResults');
+
+        let debounceTimer;
 
         function openModal() {
             modalOverlay.classList.add('active');
@@ -722,6 +738,67 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
                 closeModal();
+            }
+        });
+
+        async function performSearch(query) {
+            if (!query.trim()) {
+                searchResults.classList.add('hidden');
+                return;
+            }
+
+            await window.ooodb.init();
+            const articles = await window.ooodb.getAllAcceptedArticles();
+            const lowerQuery = query.toLowerCase();
+
+            const results = articles.filter(a =>
+                a.title.toLowerCase().includes(lowerQuery) ||
+                a.author.toLowerCase().includes(lowerQuery) ||
+                (a.content && a.content.toLowerCase().includes(lowerQuery))
+            );
+
+            if (results.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="p-4 text-center text-cyber-muted text-sm">
+                        No articles found for "${escapeHtml(query)}"
+                    </div>
+                `;
+            } else {
+                searchResults.innerHTML = results.map(article => `
+                    <a href="article-detail.html?id=${article.id}" class="block p-3 hover:bg-cyber-cyan/10 border-b border-cyber-cyan/10 last:border-0 transition-colors">
+                        <div class="text-sm text-cyber-text font-medium mb-1">${escapeHtml(article.title)}</div>
+                        <div class="text-xs text-cyber-muted">by ${escapeHtml(article.author)}</div>
+                        ${article.content ? `<div class="text-xs text-cyber-muted/70 mt-1 line-clamp-2">${escapeHtml(article.content.substring(0, 100))}...</div>` : ''}
+                    </a>
+                `).join('');
+            }
+
+            searchResults.classList.remove('hidden');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                performSearch(e.target.value);
+            }, 300);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim()) {
+                performSearch(searchInput.value);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#headerSearchInput') && !e.target.closest('#searchResults')) {
+                searchResults.classList.add('hidden');
             }
         });
 
