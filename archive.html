@@ -261,8 +261,11 @@
         </div>
     </footer>
 
-    <script src="js/db.js"></script>
-    <script src="js/pdf.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.0"></script>
+        <script src="js/pdf.js"></script>
     <script>
         let allArticles = [];
         let filteredArticles = [];
@@ -368,8 +371,46 @@
                 showToast('Article not found', 'error');
                 return;
             }
-            window.currentArticle = article;
-            generatePDF('printableContent', article.title, article.author);
+            
+            // Show loading indicator
+            document.getElementById('pdfLoading').style.display = 'flex';
+            
+            // Create a simple PDF with article content
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                
+                // Set font and color
+                pdf.setFont('helvetica');
+                pdf.setTextColor(0, 0, 0);
+                
+                // Title
+                pdf.setFontSize(18);
+                pdf.text(article.title, 20, 20);
+                
+                // Author
+                pdf.setFontSize(14);
+                pdf.text(`Author: ${article.author}`, 20, 30);
+                
+                // DOI
+                pdf.setFontSize(12);
+                pdf.text(`DOI: ${article.doi || 'Pending'}`, 20, 40);
+                
+                // Content
+                pdf.setFontSize(12);
+                const content = article.content || 'No content available';
+                const lines = pdf.splitTextToSize(content, 170);
+                pdf.text(lines, 20, 50);
+                
+                // Save PDF
+                const filename = `OOO_${article.title.replace(/\s+/g, '_')}.pdf`;
+                pdf.save(filename);
+                
+                // Hide loading indicator
+                document.getElementById('pdfLoading').style.display = 'none';
+                
+                showToast('PDF downloaded successfully');
+            }, 1000);
         }
 
         function escapeHtml(text) {

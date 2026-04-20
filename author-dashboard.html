@@ -267,7 +267,7 @@
                                     </svg>
                                     <h3 class="font-serif text-lg font-medium mb-2">Drag and drop your manuscript</h3>
                                     <p class="text-cyber-muted text-sm mb-4">or click to browse</p>
-                                    <input type="file" id="fileInput" class="hidden" accept=".docx,.txt,.pdf">
+                                    <input type="file" id="fileInput" class="hidden" accept=".docx">
                                     <button type="button" id="browseBtn" class="btn-cyber px-6 py-2 rounded text-sm font-medium">
                                         Browse Files
                                     </button>
@@ -307,6 +307,10 @@
                         <div class="flex justify-between items-center">
                             <span class="text-cyber-muted text-sm">Total Submissions</span>
                             <span id="totalSubmissions" class="text-cyber-cyan font-mono text-xl">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-cyber-muted text-sm">Awaiting Assignment</span>
+                            <span id="awaitingAssignmentCount" class="text-blue-400 font-mono text-xl">0</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span class="text-cyber-muted text-sm">Under Review</span>
@@ -378,6 +382,7 @@
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="js/db.js"></script>
     <script src="js/pdf.js"></script>
     <script>
@@ -447,11 +452,17 @@
         }
 
         function updateStats() {
-            document.getElementById('totalSubmissions').textContent = manuscripts.length;
-            document.getElementById('underReviewCount').textContent = manuscripts.filter(m => m.status === 'Under Review').length;
-            document.getElementById('acceptedCount').textContent = manuscripts.filter(m => m.status === 'Accepted').length;
-            document.getElementById('rejectedCount').textContent = manuscripts.filter(m => m.status === 'Rejected').length;
-            document.getElementById('awaitingAssignmentCount').textContent = manuscripts.filter(m => m.status === 'Awaiting Reviewer Assignment').length;
+            const totalEl = document.getElementById('totalSubmissions');
+            const underReviewEl = document.getElementById('underReviewCount');
+            const acceptedEl = document.getElementById('acceptedCount');
+            const rejectedEl = document.getElementById('rejectedCount');
+            const awaitingEl = document.getElementById('awaitingAssignmentCount');
+            
+            if (totalEl) totalEl.textContent = manuscripts.length;
+            if (underReviewEl) underReviewEl.textContent = manuscripts.filter(m => m.status === 'Under Review').length;
+            if (acceptedEl) acceptedEl.textContent = manuscripts.filter(m => m.status === 'Accepted').length;
+            if (rejectedEl) rejectedEl.textContent = manuscripts.filter(m => m.status === 'Rejected').length;
+            if (awaitingEl) awaitingEl.textContent = manuscripts.filter(m => m.status === 'Awaiting Reviewer Assignment').length;
         }
 
         async function viewManuscriptDetails(id) {
@@ -572,12 +583,18 @@
                 }]
             };
 
-            await window.ooodb.addManuscript(manuscript);
-            showToast('Manuscript submitted to neural queue.');
-            document.getElementById('submissionForm').reset();
-            document.getElementById('uploadSuccess').classList.add('hidden');
-            document.getElementById('uploadContent').classList.remove('hidden');
-            await loadManuscripts();
+            try {
+                const result = await window.ooodb.addManuscript(manuscript);
+                console.log('Manuscript submitted successfully:', result);
+                showToast('Manuscript submitted to neural queue.');
+                document.getElementById('submissionForm').reset();
+                document.getElementById('uploadSuccess').classList.add('hidden');
+                document.getElementById('uploadContent').classList.remove('hidden');
+                await loadManuscripts();
+            } catch (error) {
+                console.error('Error submitting manuscript:', error);
+                showToast('Failed to submit manuscript. Please try again.', 'error');
+            }
         });
 
         const uploadArea = document.getElementById('uploadArea');
@@ -591,7 +608,7 @@
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                handleFileUpload(e.target.files[0].name);
+                handleFileUpload(e.target.files[0]);
             }
         });
 
@@ -608,30 +625,52 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
-                handleFileUpload(e.dataTransfer.files[0].name);
+                handleFileUpload(e.dataTransfer.files[0]);
             }
         });
 
-        function handleFileUpload(fileName) {
+        async function handleFileUpload(file) {
             uploadContent.classList.add('hidden');
             uploadProgress.classList.remove('hidden');
+            
+            // Update progress text to show parsing
+            const progressText = uploadProgress.querySelector('div.text-cyber-cyan');
+            progressText.textContent = 'PARSING MANUSCRIPT...';
 
             let progress = 0;
             const progressBar = document.getElementById('progressBar');
             const interval = setInterval(() => {
-                progress += Math.random() * 30;
-                if (progress >= 100) {
-                    progress = 100;
+                progress += Math.random() * 20;
+                if (progress >= 80) {
+                    progress = 80;
                     clearInterval(interval);
-                    setTimeout(() => {
-                        uploadProgress.classList.add('hidden');
-                        uploadSuccess.classList.remove('hidden');
-                        document.getElementById('uploadedFileName').textContent = fileName;
-                        showToast('Manuscript uploaded. Entering neural review queue...');
-                    }, 500);
                 }
                 progressBar.style.width = progress + '%';
-            }, 300);
+            }, 200);
+
+            try {
+                // Parse the Word document
+                const result = await mammoth.extractRawText({arrayBuffer: await file.arrayBuffer()});
+                
+                // Update the content field with the parsed text
+                document.getElementById('manuscriptContent').value = result.value;
+                
+                // Complete the progress
+                progress = 100;
+                progressBar.style.width = progress + '%';
+                
+                setTimeout(() => {
+                    uploadProgress.classList.add('hidden');
+                    uploadSuccess.classList.remove('hidden');
+                    document.getElementById('uploadedFileName').textContent = file.name;
+                    showToast('Manuscript parsed successfully. Content extracted.');
+                }, 500);
+            } catch (error) {
+                console.error('Error parsing manuscript:', error);
+                showToast('Failed to parse manuscript. Please check the file format.', 'error');
+                uploadProgress.classList.add('hidden');
+                uploadContent.classList.remove('hidden');
+            }
         }
 
         function logout() {

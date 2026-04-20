@@ -493,9 +493,20 @@
 
         function verifyReviewerPassword() {
             const password = document.getElementById('reviewerPassword').value;
-            if (password === '5201314') {
+            // Map passwords to specific reviewers
+            const reviewerMap = {
+                '5201314': { id: 1, name: 'Reviewer Alpha' },
+                '9420': { id: 2, name: 'Reviewer Beta' },
+                '8888': { id: 3, name: 'Reviewer Gamma' }
+            };
+            
+            if (reviewerMap[password]) {
                 closeReviewerModal();
-                document.getElementById('reviewerSelectModal').style.display = 'flex';
+                // Automatically select the reviewer based on password
+                const reviewer = reviewerMap[password];
+                localStorage.setItem('ooo_reviewer_id', reviewer.id);
+                localStorage.setItem('ooo_reviewer_name', reviewer.name);
+                window.location.href = 'reviewer-dashboard.html';
             } else {
                 document.getElementById('passwordError').style.display = 'block';
                 document.getElementById('passwordError').textContent = 'INVALID NEURAL KEY';
@@ -541,7 +552,8 @@
             const password = document.getElementById('editorPassword').value;
             if (password === '520') {
                 closeEditorModal();
-                window.location.href = 'editor-dashboard.html';
+                // Use absolute path to avoid any URL encoding issues
+                window.location.href = '/editor-dashboard.html';
             } else {
                 document.getElementById('editorPasswordError').style.display = 'block';
                 document.getElementById('editorPasswordError').textContent = 'INVALID EDITOR KEY';

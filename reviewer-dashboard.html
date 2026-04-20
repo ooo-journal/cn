@@ -445,7 +445,21 @@
                 <h4 class="font-serif text-lg mb-2">${escapeHtml(m.title)}</h4>
                 <p class="text-cyber-muted text-sm">by Anonymous</p>
                 <p class="text-cyber-muted/80 text-xs mb-2 italic">Author information concealed during review</p>
-                <p class="text-cyber-muted/80 text-xs mt-2">${escapeHtml(m.content?.substring(0, 200))}...</p>
+                <div class="mt-4 mb-4">
+                    <h5 class="text-sm text-cyber-muted mb-2">Manuscript Content</h5>
+                    <div class="bg-cyber-bg p-4 rounded border border-cyber-cyan/10 max-h-48 overflow-y-auto">
+                        <p class="text-cyber-text">${escapeHtml(m.content || 'No content available')}</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h5 class="text-sm text-cyber-muted mb-2">File</h5>
+                    <p class="text-cyber-cyan font-mono text-sm">${m.file || 'No file uploaded'}</p>
+                </div>
+                <div class="mt-6">
+                    <button onclick="downloadManuscript('${m.id}')" class="btn-cyber px-4 py-2 rounded text-sm font-medium">
+                        Download Manuscript
+                    </button>
+                </div>
             `;
 
             document.getElementById('reviewComments').value = '';
@@ -462,6 +476,35 @@
             document.getElementById('reviewModal').classList.remove('active');
             document.body.style.overflow = '';
             currentManuscriptId = null;
+        }
+
+        async function downloadManuscript(manuscriptId) {
+            try {
+                const manuscript = await window.ooodb.getManuscript(manuscriptId);
+                if (!manuscript) {
+                    showToast('Manuscript not found');
+                    return;
+                }
+
+                // Create a text file with the manuscript content (author anonymous for reviewers)
+                const text = `Title: ${manuscript.title}\nAuthor: Anonymous\n\n${manuscript.content || 'No content available'}`;
+                const blob = new Blob([text], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                
+                // Create download link
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${manuscript.title.replace(/\s+/g, '_')}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showToast('Manuscript downloaded successfully');
+            } catch (error) {
+                console.error('Error downloading manuscript:', error);
+                showToast('Failed to download manuscript');
+            }
         }
 
         function setupSlider() {
